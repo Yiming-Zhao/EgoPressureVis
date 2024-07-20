@@ -53,7 +53,7 @@ Path_to_Dataset/
 ### Pip
 
 ```
-pip install numpy==1.23.4, python-opencv, matplotlib, git+https://github.com/hassony2/chumpy.git
+pip install numpy==1.23.4 python-opencv matplotlib git+https://github.com/hassony2/chumpy.git
 ```
 
 ## GUI Visualizer
