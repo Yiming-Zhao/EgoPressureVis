@@ -4,7 +4,7 @@ This repo contains the application to visualize the **EgoPressure** Dataset.
 
 ## Requirement
 
-We use Ubuntu 22.04 with Quadro RTX 6000 on a remote server.
+We tested on Ubuntu 22.04 with Quadro RTX 6000 on a remote server.
 
 ### PyTorch
 
@@ -53,7 +53,7 @@ Path_to_Dataset/
 ### Pip
 
 ```
-pip install numpy==1.23.4, python-opencv, matplotlib, git+https://github.com/hassony2/chumpy.git
+pip install numpy==1.23.4 python-opencv matplotlib git+https://github.com/hassony2/chumpy.git
 ```
 
 ## GUI Visualizer
@@ -110,6 +110,9 @@ python -m models.make_video --sequence_path Path_to_Dataset/participant_1/calibr
 * `--visualization_config_mesh_color` (list[float][3]: 0.51 0.30 0.25) Color of the mesh, RGB value with range [0,1]
 * `--visualization_config_mesh_alpha` (float:0.75) Transparency of the mesh of range [0,1]
 * `--visualization_config_joint_thickness` (int:2) Thickness of the drawn 2d joints and skelton
+
+### Video Frame
+![image](assets/video_frame.png)
 
 # SSH forward X11
 
