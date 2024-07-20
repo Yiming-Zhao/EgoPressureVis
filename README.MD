@@ -4,7 +4,7 @@ This repo contains the application to visualize the **EgoPressure** Dataset.
 
 ## Requirement
 
-We use Ubuntu 22.04 with Quadro RTX 6000 on a remote server.
+We tested on Ubuntu 22.04 with Quadro RTX 6000 on a remote server.
 
 ### PyTorch
 
