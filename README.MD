@@ -111,6 +111,9 @@ python -m models.make_video --sequence_path Path_to_Dataset/participant_1/calibr
 * `--visualization_config_mesh_alpha` (float:0.75) Transparency of the mesh of range [0,1]
 * `--visualization_config_joint_thickness` (int:2) Thickness of the drawn 2d joints and skelton
 
+### Video Frame
+![image](assets/video_frame.png)
+
 # SSH forward X11
 
 Enable the visualization of dataset on a remote server
