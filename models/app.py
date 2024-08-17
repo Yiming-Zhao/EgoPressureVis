@@ -32,7 +32,7 @@ class Visualizer:
         self.hint_below="rightarrow: next frame, leftarrow: previous frame \n"
         self.hint_below+="0(EgoView),1,2,3,4,5,6,7(camera view) \n"
         self.hint_below+="q: RGB/Depth, w: show mesh, e: vertices_disp, r: pressure overlay, t: sensel area, z: joints2D\n"
-        self.visualization_config={"depth_colormap":"GRAY","force_color_map":"OCEAN","mesh_color":(0.4882353,  0.3117647,0.25098039 ),"mesh_alpha":0.5,"joint_thickness":2}
+        self.visualization_config={"depth_colormap":"JET","force_color_map":"INFERNO","mesh_color":(0.95,  0.95,0.95 ),"mesh_alpha":0.85,"joint_thickness":4}
      
         self.master = master
         self.right_mano_object=ManoObject(side="right",device=device)
@@ -774,7 +774,7 @@ class Application:
 
         info_frame=tk.LabelFrame(self.video_dialog_window,text="Info", padx=5, pady=5)
         info_frame.grid(row=row, column=0, padx=10, pady=5, sticky=tk.W)
-        participant_label = tk.Label(info_frame, text="Participant: {}".format("demo_participant"))     #self.selected_participant
+        participant_label = tk.Label(info_frame, text="Participant: {}".format(self.selected_participant))     #self.selected_participant
         participant_label.grid(row=0, column=0, sticky=tk.W)
         sequence_label = tk.Label(info_frame, text="Sequence: {}".format(self.selected_sequence))
         sequence_label.grid(row=1, column=0, sticky=tk.W)

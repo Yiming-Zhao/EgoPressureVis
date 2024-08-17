@@ -13,7 +13,8 @@ mano_ncomps=45
 mano_root= os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'mano_models')
 obj_path={'left':os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'mano_models',"MANO_UV_left.obj"),
             'right':os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'mano_models',"MANO_UV_right.obj")}
-participants=['participant_1','participant_2','participant_3','participant_4','participant_5','participant_6','participant_7','participant_8','participant_9','participant_10','participant_11','participant_12','participant_13','participant_14','participant_15','participant_16','participant_17','participant_18','participant_19','participant_20','participant_21','participant_22','participant_23','participant_24','participant_25','participant_26']
+
+participants=['participant_01','participant_02','participant_03','participant_04','participant_05','participant_06','participant_07','participant_08','participant_09','participant_10','participant_11','participant_12','participant_13','participant_14','participant_15','participant_16','participant_17','participant_18','participant_19','participant_20','participant_21']
 cameras={0:"camera_d",1:"camera_1",2:"camera_2",3:"camera_3",4:"camera_4",5:"camera_5",6:"camera_6",7:"camera_7"}
 colormaps = {
             'GRAY': cv2.COLORMAP_BONE,  # Using BONE as it closely resembles GRAY

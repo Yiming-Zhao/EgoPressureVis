@@ -25,10 +25,10 @@ class video_config:
         self.save_images = False
         self.visible_camera_views = {0: True, 1: False, 2: False, 3: False, 4: False, 5: False, 6: False, 7: False} 
         self.visualization_config = {
-            "depth_colormap": "GRAY",
-            "force_color_map": "OCEAN",
-            "mesh_color": [0.51, 0.30, 0.25],
-            "mesh_alpha": 0.75,
+            "depth_colormap": "JET",
+            "force_color_map": "INFERNO",
+            "mesh_color": [0.95, 0.95, 0.95],
+            "mesh_alpha": 0.85,
             "joint_thickness": 2
         }
         self.visibility = {
@@ -52,9 +52,9 @@ class video_config:
                         "visible_camera_views":"(list[int]: 0 1) List of camera views to be visualized, 0(EgoCam),1,2,3,4,5,6,7(StaticCam),-1(no camera)",
                         "visualization_config":{"depth_colormap":"(str:'GRAY') Colormap for depth visualization,'GRAY','INFERNO','OCEAN','JET','HOT'",
                         "force_color_map":"(str:'OCEAN') Colormap for force visualization,'GRAY','INFERNO','OCEAN','HOT'",
-                        "mesh_color":"(list[float][3]: 0.51 0.30 0.25) Color of the mesh, RGB value with range [0,1]",
-                        "mesh_alpha":"(float:0.75) Transparency of the mesh of range [0,1]",
-                        "joint_thickness":"(int:2) Thickness of the drawn 2d joints and skelton"},
+                        "mesh_color":"(list[float][3]: 0.95 0.95 0.95) Color of the mesh, RGB value with range [0,1]",
+                        "mesh_alpha":"(float:0.85) Transparency of the mesh of range [0,1]",
+                        "joint_thickness":"(int:4) Thickness of the drawn 2d joints and skelton"},
                         "visibility":{ "RGB":"(bool:True) Visualize RGB images",
                         "depth":"(bool:False) Visualize depth images, ignored if RGB is True",
                         "mesh":"(bool:False) Visualize mesh",
@@ -242,7 +242,8 @@ def make_video(path,config,device="cuda:0",update_handle=print_progress,mano_obj
         return
         # raise ValueError("Invalid sequence folder name")
     if mano_object is None:
-        mano_object = ManoObject(side=side,device=device)
+        if config.visibility["mesh"] or config.visibility["joints2D"]:
+            mano_object = ManoObject(side=side,device=device)
     if config.visibility["uv_pressure"]:
         mano_obj_path=obj_path[side]
         texcoords, faces_for_uv=parse_obj_for_uv_mapping(mano_obj_path)
@@ -292,7 +293,7 @@ def make_video(path,config,device="cuda:0",update_handle=print_progress,mano_obj
     out = cv2.VideoWriter(os.path.join(video_save_folder,'{}.mp4'.format(vis_name)),cv2.VideoWriter_fourcc(*'mp4v'), fps, video_size)  
     update_handle({'message':"Video rendering started...",'newline':True})
     
-
+    depth_cam_min_max={}
     for index, fid in enumerate(indices[config.frame_range[0]:config.frame_range[1]]):
         
       
@@ -341,14 +342,17 @@ def make_video(path,config,device="cuda:0",update_handle=print_progress,mano_obj
                     assert image_size[:2]==(camera_intrinsic["ImageSizeY"],camera_intrinsic["ImageSizeX"])
 
 
-                    frame_pose=dynamic_camera_poses["{:06}".format(fid)] 
-                    R=(frame_pose["R"])
-                    t=(frame_pose["T"])
+
                    
                 elif os.path.exists(depth_path) and config.visibility["depth"]:
                     depth=cv2.imread(depth_path,cv2.IMREAD_UNCHANGED)
-                    image,_,_=apply_colormap_on_depth_image(depth,color_map=config.visualization_config["depth_colormap"])
-              
+                    if cam_idx not in depth_cam_min_max:
+                        depth_cam_min_max[cam_idx]=(np.min(depth),np.max(depth))
+                    depth_min,depth_max=depth_cam_min_max[cam_idx]
+                    image,_,_=apply_colormap_on_depth_image(depth,color_map=config.visualization_config["depth_colormap"],min_val=depth_min,max_val=depth_max)
+                    image_size=image.shape
+                frame_pose=dynamic_camera_poses["{:06}".format(fid)] 
+
                     
             else:
                 image_texts.append({'text':f"Camera {cam_idx}"})
@@ -359,16 +363,28 @@ def make_video(path,config,device="cuda:0",update_handle=print_progress,mano_obj
                     image_size=image.shape
                     assert image_size[:2]==(camera_intrinsic["ImageSizeY"],camera_intrinsic["ImageSizeX"])
 
-                    frame_pose=static_cameras[cam_idx]
-                    R=(frame_pose["R"])
-                    t=(frame_pose["T"])
+
                  
                 elif os.path.exists(depth_path) and config.visibility["depth"]:
                     depth=cv2.imread(depth_path,cv2.IMREAD_UNCHANGED)
-                    image,_,_=apply_colormap_on_depth_image(depth,color_map=config.visualization_config["depth_colormap"])
+                    if cam_idx not in depth_cam_min_max:
+                        depth_cam_min_max[cam_idx]=(np.min(depth),np.max(depth))
+                    depth_min,depth_max=depth_cam_min_max[cam_idx]
+                    image,_,_=apply_colormap_on_depth_image(depth,color_map=config.visualization_config["depth_colormap"],min_val=depth_min,max_val=depth_max)
+                    image_size=image.shape
+
+                frame_pose=static_cameras[cam_idx]
 
 
-
+            R=(frame_pose["R"])
+            t=(frame_pose["T"])
+            if config.visibility["mesh"] and config.visibility["joints2D"]:
+                
+                R_torch=torch.from_numpy(R).to(device).float().unsqueeze(0)
+                T_torch=torch.from_numpy(t).to(device).float().unsqueeze(0)
+                K_torch=torch.from_numpy(K).to(device).float()
+            
+  
             if config.visibility["wrapped_force"] or config.visibility["sensel_area"]:
                 sensel_corner_2D,H =project_rectangle(sensel_corners_3D, K,R,t, scale_factor=1.0)
                 sensel_corner_2D=sensel_corner_2D[:,0,:]
@@ -376,10 +392,8 @@ def make_video(path,config,device="cuda:0",update_handle=print_progress,mano_obj
                     wrapped_force=get_force_overlay_img(pressure,None,H,image_size, colormap=colormaps[config.visualization_config["force_color_map"]],only_force=True)
 
 
-            R_torch=torch.from_numpy(R).to(device).float().unsqueeze(0)
-            T_torch=torch.from_numpy(t).to(device).float().unsqueeze(0)
-            K_torch=torch.from_numpy(K).to(device).float()
-        
+   
+
 
             if config.visibility["mesh"]:
             
@@ -404,8 +418,6 @@ def make_video(path,config,device="cuda:0",update_handle=print_progress,mano_obj
                 
 
 
-            if config.visibility["wrapped_force"]: 
-                image=cv2.addWeighted(image,1.0,wrapped_force,1.0,0)
 
             if config.visibility["sensel_area"]:
                 for i in range(4):
@@ -419,16 +431,28 @@ def make_video(path,config,device="cuda:0",update_handle=print_progress,mano_obj
                 alpha=config.visualization_config["mesh_alpha"]
                 image=alpha*foreground*mask+ (1-alpha)*image*mask+(1-mask)*image
                 image=image.astype(np.uint8)
+            
+            if config.visibility["wrapped_force"]: 
+                image=cv2.addWeighted(image,1.0,wrapped_force,1.0,0)
+
 
             if config.visibility["joints2D"]:
                 image=draw_skeleton(image,j2d,thickness=config.visualization_config["joint_thickness"])            
             sub_frames.append(image)
         if config.visibility["uv_pressure"]:
+            # check whether pressure map is is np.uint8
             uv_pressure_map=data["pressure_map"]
+            if uv_pressure_map.dtype==np.uint8:
+                uv_pressure_map=uv_pressure_map.astype(float)/255
+                         
+        
             uv_pressure_map_range=data["pressure_map_range"]
             uv_pressure_map=np.tile(uv_pressure_map,(1,1,3))
             uv_pressure_map=cv2.resize(uv_pressure_map, (uv_grid.shape[0], uv_grid.shape[1]))
+            mask = uv_pressure_map > 0
             uv_pressure_map=pressure_to_colormap(uv_pressure_map, colormaps[config.visualization_config["force_color_map"]])
+           
+            uv_pressure_map = uv_pressure_map * mask
             uv_pressure_map= cv2.addWeighted(uv_grid.copy().astype(int), 1.0, uv_pressure_map.astype(int), 1.0, 0.0)
             sub_frames.append(uv_pressure_map)
             text="Pressure Map"

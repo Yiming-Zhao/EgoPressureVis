@@ -277,16 +277,20 @@ class ManoObject(torch.nn.Module):
      
         return v,jtr
 
-def apply_colormap_on_depth_image(depth_image,color_map="GRAY"):
+def apply_colormap_on_depth_image(depth_image,color_map="GRAY",min_val=None,max_val=None):
         
 
         # Calculate the min and max values
-        min_val = np.min(depth_image)
-        max_val = np.max(depth_image)
+        if min_val is None:
+            min_val = np.min(depth_image)
+        if max_val is None:
+            max_val = np.max(depth_image)
+
 
         # ormalize the image to the range [0, 255]
         depth_image_normalized = (depth_image - min_val) / (max_val - min_val) * 255
-
+        depth_image_normalized[depth_image_normalized < 0] = 0
+        depth_image_normalized[depth_image_normalized > 255] = 255
         depth_image_normalized_8bit = depth_image_normalized.astype(np.uint8)
 
         
