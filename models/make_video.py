@@ -336,7 +336,7 @@ def make_video(path,config,device="cuda:0",update_handle=print_progress,mano_obj
                 image_path=os.path.join( path, "camera_d","color","{:06}.jpeg".format(fid)) 
                 depth_path=os.path.join( path, "camera_d","depth","{:06}.png".format(fid))
                 
-                if os.path.exists(image_path) and config.visibility["RGB"]:
+                if os.path.exists(image_path) or config.visibility["RGB"]:
                     image=cv2.imread(image_path,cv2.COLOR_BGR2RGB)
                     image_size=image.shape
                     assert image_size[:2]==(camera_intrinsic["ImageSizeY"],camera_intrinsic["ImageSizeX"])
